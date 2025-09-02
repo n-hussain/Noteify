@@ -1,0 +1,55 @@
+/* General Reset / Base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #fafafa;
+  color: #222;
+  line-height: 1.5;
+  cursor: url('/assets/pushpin.png') 16 16, auto;
+}
+
+/* General Container for Pages */
+.page-container {
+  padding: 2rem;
+  max-width: 900px;
+  margin: auto;
+}
+
+/* Headings */
+h1, h2, h3 {
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* Links */
+a {
+  color: #0077cc;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Card-like items (good for notes, posts, etc.) */
+.card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Messages */
+.loading,
+.empty {
+  text-align: center;
+  color: #777;
+  margin-top: 2rem;
+}
