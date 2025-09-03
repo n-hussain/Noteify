@@ -29,13 +29,30 @@ export default function Notes() {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortOption, setSortOption] = useState<"created" | "updated" | "title">("updated");
+  const [sortOption, setSortOption] = useState<"created" | "updated" | "title">(
+    "updated"
+  );
 
-  // Fetch notes from backend
+  const token = localStorage.getItem("access_token");
+
+  const authHeaders = token
+    ? {
+        Authorization: `Bearer ${token}`,
+      }
+    : {};
+
   useEffect(() => {
     const fetchNotes = async () => {
+      if (!token) {
+        alert("You must log in first!");
+        setLoading(false);
+        return;
+      }
+
       try {
-        const res = await client.get<Note[]>("/notes/");
+        const res = await client.get<Note[]>("/users/me/notes/", {
+          headers: authHeaders,
+        });
         setNotes(res.data);
       } catch (err) {
         console.error("Error fetching notes:", err);
@@ -44,30 +61,26 @@ export default function Notes() {
         setLoading(false);
       }
     };
-    fetchNotes();
-  }, []);
 
-  // Add new note dynamically
+    fetchNotes();
+  }, [token]);
+
   const handleAddNote = (note: Note) => {
     setNotes((prev) => [note, ...prev]);
   };
 
-  // Update note dynamically after editing
   const handleUpdateNote = (updated: Note) => {
-    setNotes((prev) =>
-      prev.map((note) => (note.id === updated.id ? updated : note))
-    );
+    setNotes((prev) => prev.map((note) => (note.id === updated.id ? updated : note)));
   };
 
-  // Delete note dynamically
   const handleDeleteNote = async (id: number) => {
     if (!window.confirm("Are you sure you want to delete this note?")) return;
 
-    setNotes((prev) => prev.filter((n) => n.id !== id));
-
     try {
-      const res = await client.delete(`/notes/${id}/`);
-      if (res.status !== 200 && res.status !== 204) {
+      const res = await client.delete(`/notes/${id}`, { headers: authHeaders });
+      if (res.status === 200 || res.status === 204) {
+        setNotes((prev) => prev.filter((n) => n.id !== id));
+      } else {
         throw new Error("Unexpected response status");
       }
     } catch (err: any) {
@@ -86,19 +99,19 @@ export default function Notes() {
     setEditingNote(null);
   };
 
-  // Filter and sort notes
-  const filteredNotes = notes.filter((note) => {
-  const matchesText =
-    note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    note.content.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredNotes = notes
+    .filter((note) => {
+      const matchesText =
+        note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        note.content.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const matchesTag =
-    note.tags?.some((t) =>
-      t.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ) ?? false;
+      const matchesTag =
+        note.tags?.some((t) =>
+          t.name.toLowerCase().includes(searchQuery.toLowerCase())
+        ) ?? false;
 
-  return matchesText || matchesTag;
-  })
+      return matchesText || matchesTag;
+    })
     .sort((a, b) => {
       if (sortOption === "created") {
         return new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime();
@@ -119,7 +132,6 @@ export default function Notes() {
           <button className="new-note-btn" onClick={() => setShowForm(true)}>
             + New Note
           </button>
-
           <SearchBar
             query={searchQuery}
             onQueryChange={setSearchQuery}
@@ -134,6 +146,7 @@ export default function Notes() {
           onClose={handleFormClose}
           onSave={editingNote ? handleUpdateNote : handleAddNote}
           note={editingNote || undefined}
+          authHeaders={authHeaders} // Pass headers to form
         />
       )}
 

@@ -2,15 +2,15 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import client from "../api/client";
 import type { Note } from "../pages/Notes";
-import "../styles/notes.css";
 
 interface NoteFormProps {
   onClose: () => void;
   onSave: (note: Note) => void;
   note?: Note;
+  authHeaders?: { Authorization?: string };
 }
 
-export default function NoteForm({ onClose, onSave, note }: NoteFormProps) {
+export default function NoteForm({ onClose, onSave, note, authHeaders}: NoteFormProps) {
   const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
   const [tags, setTags] = useState(
@@ -30,14 +30,18 @@ export default function NoteForm({ onClose, onSave, note }: NoteFormProps) {
     setSaving(true);
     try {
       const payload = { title, content, tags: tagList };
-
       let res;
+
       if (note) {
-        // Editing existing note
-        res = await client.put<Note>(`/notes/${note.id}/`, payload);
+        // Edit existing note
+        res = await client.put<Note>(`/notes/${note.id}/`, payload,
+          {headers: authHeaders}
+        );
       } else {
-        // Creating new note
-        res = await client.post<Note>(`/users/1/notes/`, payload);
+        // Create new note for current user
+        res = await client.post<Note>(`/notes/`, payload,
+          {headers: authHeaders,}
+        );
       }
 
       onSave(res.data);

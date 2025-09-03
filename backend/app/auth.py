@@ -4,7 +4,7 @@ from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from app.crud import get_user_by_email, verify_password
+from app.crud import get_user_by_username, verify_password
 from app.database import SessionLocal
 
 SECRET_KEY = "YOUR_SECRET_KEY"
@@ -27,8 +27,8 @@ def get_db():
     finally:
         db.close()
 
-def authenticate_user(db: Session, email: str, password: str):
-    user = get_user_by_email(db, email=email)
+def authenticate_user(db, username: str, password: str):
+    user = get_user_by_username(db, username=username)
     if not user or not verify_password(password, user.password):
         return False
     return user
@@ -41,12 +41,12 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
+        username: str = payload.get("sub")
+        if username is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = get_user_by_email(db, email=email)
+    user = get_user_by_username(db, username=username)
     if user is None:
         raise credentials_exception
     return user

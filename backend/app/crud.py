@@ -35,6 +35,10 @@ def get_user_by_email(db: Session, email: str):
 def get_users(db: Session, skip: int = 0, limit: int = 10):
     return db.query(model.User).offset(skip).limit(limit).all()
 
+def get_user_by_username(db, username: str):
+    return db.query(model.User).filter(model.User.username == username).first()
+
+
 
 # -------------------------
 # Note CRUD
