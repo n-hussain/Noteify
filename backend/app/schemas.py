@@ -39,8 +39,11 @@ class UserOut(UserBase):
 # Note Schemas
 # -------------------------
 class NoteBase(BaseModel):
-    title: str
-    content: str
+    content: Optional[str] = None   # now optional
+    x: Optional[float] = 0
+    y: Optional[float] = 0
+    width: Optional[float] = 150
+    height: Optional[float] = 100
 
 class NoteCreate(NoteBase):
     tags: List[str] = []  # list of tag names when creating a note
@@ -49,8 +52,6 @@ class NoteOut(NoteBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    pinned: bool
-    archived: bool
     tags: List[TagOut] = []  # show tags
     owner: Optional[UserOut] = None  # show who created the note
 
@@ -58,8 +59,9 @@ class NoteOut(NoteBase):
         from_attributes = True
 
 class NoteUpdate(BaseModel):
-    title: Optional[str] = None
     content: Optional[str] = None
-    pinned: Optional[bool] = None
-    archived: Optional[bool] = None
     tags: Optional[List[str]] = None
+    x: Optional[float] = None
+    y: Optional[float] = None
+    width: Optional[float] = None
+    height: Optional[float] = None

@@ -5,12 +5,18 @@
   box-sizing: border-box;
 }
 
+html, body, #root {
+  height: 100%;
+}
+
 body {
   font-family: Arial, sans-serif;
   background: #fafafa;
   color: #222;
   line-height: 1.5;
-  cursor: url('/assets/pushpin.png') 16 16, auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 /* General Container for Pages */
@@ -18,6 +24,9 @@ body {
   padding: 2rem;
   max-width: 900px;
   margin: auto;
+  flex: 1; /* take up remaining vertical space */
+  display: flex;
+  flex-direction: column;
 }
 
 /* Headings */

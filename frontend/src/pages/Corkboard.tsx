@@ -1,42 +1,66 @@
-import { useState } from "react";
+import { useState, useEffect} from "react";
+import { useNavigate } from "react-router-dom";
+import CorkNote from "../components/CorkNote";
+import { useCorkboard } from "../components/UseCorkboard";
 import "../styles/Corkboard.css";
 
-interface CorkNote {
-  id: number;
-  content: string;
-  x: number;
-  y: number;
-}
-
 export default function Corkboard() {
-  const [notes, setNotes] = useState<CorkNote[]>([]);
-  const [counter, setCounter] = useState(1); // simple unique id
+  const [adding, setAdding] = useState(false);
+  const [erasing, setErasing] = useState(false);
+  const navigate = useNavigate();
+
+  const token = localStorage.getItem("access_token");
+  const { notes, addNote, deleteNote, updateNote } = useCorkboard(token);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!adding || erasing) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const newNote: CorkNote = { id: counter, content: "", x, y };
-    setNotes([...notes, newNote]);
-    setCounter(counter + 1);
+    addNote({ content: "", x: e.clientX - rect.left, y: e.clientY - rect.top });
+    setAdding(false);
   };
+  
 
-  const handleContentChange = (id: number, content: string) => {
-    setNotes(notes.map(n => n.id === id ? { ...n, content } : n));
-  };
+  useEffect(() => {
+    if (!token) {
+      navigate("/login");
+    }
+  }, [token]);
 
   return (
-    <div className="corkboard" onClick={handleCanvasClick}>
-      {notes.map(note => (
-        <textarea
-          key={note.id}
-          className="corknote"
-          style={{ top: note.y, left: note.x, position: "absolute" }}
-          value={note.content}
-          onChange={(e) => handleContentChange(note.id, e.target.value)}
-        />
-      ))}
+    <div className="corkboard-page">
+      <div className="corkboard-canvas-container">
+        <div className={`corkboard-canvas ${adding ? "adding" : ""}`} onClick={handleCanvasClick}>
+          {notes.map(note => (
+            <CorkNote
+              key={note.id}
+              note={note}
+              token={token}
+              erasing={erasing}
+              onDelete={deleteNote}
+              onUpdate={updateNote}
+            />
+          ))}
+        </div>
+
+        <button className="toggle-add-btn floating" onClick={() => { setAdding(!adding); setErasing(false); }}>
+          {adding ? "Stop Adding Notes" : "Add Note"}
+        </button>
+
+        <button className="eraser-btn" onClick={() => { setErasing(!erasing); setAdding(false); }}>
+          {erasing ? "Stop Erasing" : "Eraser"}
+        </button>
+
+        <button
+          className="logout-btn"
+          onClick={() => {
+            localStorage.removeItem("access_token");
+            navigate("/");
+          }}
+        >
+          Logout
+        </button>
+
+      </div>
     </div>
   );
 }

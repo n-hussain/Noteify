@@ -4,6 +4,7 @@ import NoteCard from "../components/NoteCard";
 import NoteForm from "../components/NoteForm";
 import SearchBar from "../components/SearchBar";
 import "../styles/notes.css";
+import { useNavigate } from "react-router-dom";
 
 export interface Tag {
   id: number;
@@ -12,12 +13,9 @@ export interface Tag {
 
 export interface Note {
   id: number;
-  title: string;
   content: string;
   created_at?: string;
   updated_at?: string;
-  pinned?: boolean;
-  archived?: boolean;
   owner_id?: number;
   tags?: Tag[];
 }
@@ -29,10 +27,10 @@ export default function Notes() {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortOption, setSortOption] = useState<"created" | "updated" | "title">(
+  const [sortOption, setSortOption] = useState<"created" | "updated">(
     "updated"
   );
-
+  const navigate = useNavigate();
   const token = localStorage.getItem("access_token");
 
   const authHeaders = token
@@ -102,7 +100,6 @@ export default function Notes() {
   const filteredNotes = notes
     .filter((note) => {
       const matchesText =
-        note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         note.content.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesTag =
@@ -115,10 +112,8 @@ export default function Notes() {
     .sort((a, b) => {
       if (sortOption === "created") {
         return new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime();
-      } else if (sortOption === "updated") {
-        return new Date(b.updated_at!).getTime() - new Date(a.updated_at!).getTime();
       } else {
-        return a.title.localeCompare(b.title);
+        return new Date(b.updated_at!).getTime() - new Date(a.updated_at!).getTime();
       }
     });
 
@@ -126,6 +121,12 @@ export default function Notes() {
 
   return (
     <div className="notes-page">
+      <button className="back-btn" onClick={() => navigate("/")}>
+    &lt;
+  </button>
+  <button className="back-btn" onClick={() => navigate("/corkboard")}>
+    cork
+  </button>
       <div className="notes-header">
         <h1>My Notes</h1>
         <div className="header-actions">

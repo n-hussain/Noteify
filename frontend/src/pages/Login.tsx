@@ -20,7 +20,7 @@ export default function Login() {
       });
 
       localStorage.setItem("access_token", data.access_token);
-      navigate("/notes"); // redirect after login
+      navigate("/corkboard"); // redirect after login
     } catch (err) {
       console.error("Login failed:", err);
       alert("Incorrect username or password");

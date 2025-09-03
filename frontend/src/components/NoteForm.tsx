@@ -11,7 +11,6 @@ interface NoteFormProps {
 }
 
 export default function NoteForm({ onClose, onSave, note, authHeaders}: NoteFormProps) {
-  const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
   const [tags, setTags] = useState(
     note?.tags?.map((tag) => tag.name).join(", ") || ""
@@ -20,7 +19,7 @@ export default function NoteForm({ onClose, onSave, note, authHeaders}: NoteForm
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !content.trim()) return;
+    if (!content.trim()) return;
 
     const tagList = tags
       .split(",")
@@ -29,7 +28,7 @@ export default function NoteForm({ onClose, onSave, note, authHeaders}: NoteForm
 
     setSaving(true);
     try {
-      const payload = { title, content, tags: tagList };
+      const payload = { content, tags: tagList };
       let res;
 
       if (note) {
@@ -46,7 +45,6 @@ export default function NoteForm({ onClose, onSave, note, authHeaders}: NoteForm
 
       onSave(res.data);
       onClose();
-      setTitle("");
       setContent("");
       setTags("");
     } catch (err) {
@@ -62,13 +60,6 @@ export default function NoteForm({ onClose, onSave, note, authHeaders}: NoteForm
       <div className="note-modal-content" onClick={(e) => e.stopPropagation()}>
         <h2>{note ? "Edit Note" : "New Note"}</h2>
         <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
           <textarea
             placeholder="Content"
             value={content}

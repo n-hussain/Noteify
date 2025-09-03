@@ -5,11 +5,15 @@ from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# -------------------------
+# Password utilities
+# -------------------------
 def get_password_hash(password: str):
     return pwd_context.hash(password)
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
+
 
 # -------------------------
 # User CRUD
@@ -32,12 +36,11 @@ def get_user(db: Session, user_id: int):
 def get_user_by_email(db: Session, email: str):
     return db.query(model.User).filter(model.User.email == email).first()
 
-def get_users(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(model.User).offset(skip).limit(limit).all()
-
-def get_user_by_username(db, username: str):
+def get_user_by_username(db: Session, username: str):
     return db.query(model.User).filter(model.User.username == username).first()
 
+def get_users(db: Session, skip: int = 0, limit: int = 10):
+    return db.query(model.User).offset(skip).limit(limit).all()
 
 
 # -------------------------
@@ -45,12 +48,15 @@ def get_user_by_username(db, username: str):
 # -------------------------
 def create_note(db: Session, note: schemas.NoteCreate, user_id: int):
     db_note = model.Note(
-        title=note.title,
         content=note.content,
-        owner_id=user_id
+        owner_id=user_id,
+        x=note.x,
+        y=note.y,
+        width=note.width,
+        height=note.height,
     )
 
-    # Handle tags
+    # Add tags
     tags = []
     for tag_name in note.tags:
         tag = db.query(model.Tag).filter(model.Tag.name == tag_name).first()
@@ -72,18 +78,15 @@ def update_note(db: Session, note_id: int, note_data: schemas.NoteUpdate):
     if not db_note:
         return None
 
-    if note_data.title is not None:
-        db_note.title = note_data.title
-    if note_data.content is not None:
-        db_note.content = note_data.content
-    if note_data.pinned is not None:
-        db_note.pinned = note_data.pinned
-    if note_data.archived is not None:
-        db_note.archived = note_data.archived
+    # Update simple fields
+    for field in ["content", "x", "y", "width", "height"]:
+        value = getattr(note_data, field, None)
+        if value is not None:
+            setattr(db_note, field, value)
 
-    # ------------------- TAGS -------------------
+    # Update tags
     if note_data.tags is not None:
-        db_note.tags.clear()  # remove all existing tags
+        db_note.tags.clear()
         for tag_name in note_data.tags:
             tag = db.query(model.Tag).filter(model.Tag.name == tag_name).first()
             if not tag:
@@ -97,9 +100,11 @@ def update_note(db: Session, note_id: int, note_data: schemas.NoteUpdate):
     db.refresh(db_note)
     return db_note
 
-
 def get_notes(db: Session, skip: int = 0, limit: int = 10):
     return db.query(model.Note).offset(skip).limit(limit).all()
+
+def get_notes_for_user(db: Session, user_id: int):
+    return db.query(model.Note).filter(model.Note.owner_id == user_id).all()
 
 def get_note(db: Session, note_id: int):
     return db.query(model.Note).filter(model.Note.id == note_id).first()

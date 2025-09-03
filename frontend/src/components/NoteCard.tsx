@@ -9,13 +9,7 @@ interface NoteCardProps {
 
 export default function NoteCard({ note, onDelete, onEdit }: NoteCardProps) {
   return (
-    <div className={`note-card ${note.archived ? "archived" : ""}`}>
-      <div className="note-header">
-        <h2>
-          {note.title} {note.pinned && <span className="pinned">📌</span>}
-        </h2>
-      </div>
-
+    <div className={"note-card"}>
       <p>{note.content}</p>
 
       {note.tags && note.tags.length > 0 && (

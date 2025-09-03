@@ -9,7 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# CORS for React frontend
+# -------------------------
+# CORS
+# -------------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -18,7 +20,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Dependency to get DB session
+# -------------------------
+# Dependency: DB Session
+# -------------------------
 def get_db():
     db = SessionLocal()
     try:
@@ -52,37 +56,25 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     return {"access_token": access_token, "token_type": "bearer"}
 
 # -------------------------
-# Note Routes
+# Corkboard Routes (new system)
 # -------------------------
-
-# Get all notes of current user
-@app.get("/users/me/notes/", response_model=List[schemas.NoteOut])
-def read_my_notes(
+@app.get("/corkboard", response_model=List[schemas.NoteOut])
+def read_corkboard_notes(
     db: Session = Depends(get_db),
     current_user: model.User = Depends(get_current_user)
 ):
-    return db.query(model.Note).filter(model.Note.owner_id == current_user.id).all()
+    return crud.get_notes_for_user(db, user_id=current_user.id)
 
-# Create note for current user
-@app.post("/notes/", response_model=schemas.NoteOut)
-def create_note_for_current_user(
+@app.post("/corkboard", response_model=schemas.NoteOut)
+def create_corkboard_note(
     note: schemas.NoteCreate,
     db: Session = Depends(get_db),
     current_user: model.User = Depends(get_current_user)
 ):
     return crud.create_note(db=db, note=note, user_id=current_user.id)
 
-# Read single note
-@app.get("/notes/{note_id}", response_model=schemas.NoteOut)
-def read_note(note_id: int, db: Session = Depends(get_db)):
-    db_note = crud.get_note(db, note_id=note_id)
-    if not db_note:
-        raise HTTPException(status_code=404, detail="Note not found")
-    return db_note
-
-# Update note (must be owner)
-@app.put("/notes/{note_id}", response_model=schemas.NoteOut)
-def edit_note(
+@app.put("/corkboard/{note_id}", response_model=schemas.NoteOut)
+def update_corkboard_note(
     note_id: int,
     note: schemas.NoteUpdate,
     db: Session = Depends(get_db),
@@ -93,9 +85,8 @@ def edit_note(
         raise HTTPException(status_code=404, detail="Note not found or access denied")
     return crud.update_note(db, note_id=note_id, note_data=note)
 
-# Delete note (must be owner)
-@app.delete("/notes/{note_id}")
-def delete_note(
+@app.delete("/corkboard/{note_id}")
+def delete_corkboard_note(
     note_id: int,
     db: Session = Depends(get_db),
     current_user: model.User = Depends(get_current_user)
