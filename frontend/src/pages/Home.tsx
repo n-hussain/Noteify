@@ -6,16 +6,13 @@ export default function Home() {
     <div className="home-page">
       <div className="home-content">
         <h1>Welcome to Noteify</h1>
-        <p>Your personal note-taking app to keep everything organized.</p>
+        <p>Your personal pin board to keep everything organized.</p>
         <div className="home-buttons">
           <Link to="/login" className="btn">
             Login
           </Link>
-          <Link to="/register" className="btn register">
-            Register
-          </Link>
           <Link to="/corkboard" className="btn register">
-            Corkboard
+            Go To Corkboard
           </Link>
         </div>
       </div>

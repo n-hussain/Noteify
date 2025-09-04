@@ -101,7 +101,11 @@ def update_note(db: Session, note_id: int, note_data: schemas.NoteUpdate):
     return db_note
 
 def get_notes(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(model.Note).offset(skip).limit(limit).all()
+    notes = db.query(model.Note).offset(skip).limit(limit).all()
+    for note in notes:
+        if note.tags is None:
+            note.tags = []
+    return notes
 
 def get_notes_for_user(db: Session, user_id: int):
     return db.query(model.Note).filter(model.Note.owner_id == user_id).all()

@@ -1,20 +1,43 @@
+import { useState, useEffect } from "react";
 import client from "../api/client";
 
 interface CorkNoteProps {
-  note: { id: number; content: string; x: number; y: number };
+  note: { id: number; content?: string; x: number; y: number; tags?: string[] };
   token: string | null;
   erasing: boolean;
-  onUpdate: (id: number, updatedFields: Partial<{ content: string; x: number; y: number }>) => void;
+  onUpdate: (id: number, updatedFields: Partial<{ content: string; x: number; y: number; tags?: string[] }>) => void;
   onDelete: (id: number) => void;
 }
 
 export default function CorkNote({ note, token, erasing, onUpdate, onDelete }: CorkNoteProps) {
+  const [showTags, setShowTags] = useState(false);
+  const [newTag, setNewTag] = useState("");
+  const [content, setContent] = useState(note.content ?? "");
+
+  useEffect(() => {
+    setContent(note.content ?? "");
+  }, [note.content]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (content !== note.content) {
+        onUpdate(note.id, { content });
+        if (token) {
+          client.put(`/corkboard/${note.id}`, { content }, { headers: { Authorization: `Bearer ${token}` } })
+            .catch(err => console.error("Failed to update content:", err));
+        }
+      }
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [content, note.content, note.id, onUpdate, token]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLTextAreaElement>) => {
     if (erasing) return;
     e.stopPropagation();
 
-    const canvasRect = document.querySelector('.corkboard-canvas')!.getBoundingClientRect();
+    const canvasRect = document.querySelector('.corkboard-canvas')?.getBoundingClientRect();
+    if (!canvasRect) return;
+
     const offsetX = e.clientX - canvasRect.left - note.x;
     const offsetY = e.clientY - canvasRect.top - note.y;
 
@@ -31,10 +54,9 @@ export default function CorkNote({ note, token, erasing, onUpdate, onDelete }: C
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
 
+      if (!token) return;
       try {
-        await client.put(`/corkboard/${note.id}`, { x: currentX, y: currentY }, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await client.put(`/corkboard/${note.id}`, { x: currentX, y: currentY }, { headers: { Authorization: `Bearer ${token}` } });
       } catch (err) {
         console.error("Failed to update note position:", err);
       }
@@ -44,38 +66,70 @@ export default function CorkNote({ note, token, erasing, onUpdate, onDelete }: C
     window.addEventListener("mouseup", handleMouseUp);
   };
 
-  const handleContentChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const content = e.target.value;
-    onUpdate(note.id, { content });
+  const handleAddTag = async () => {
+    if (!newTag.trim() || !token) return;
+    const updatedTags = [...(note.tags ?? []), newTag.trim()];
+    onUpdate(note.id, { tags: updatedTags });
     try {
-      await client.put(`/corkboard/${note.id}`, { content }, { headers: { Authorization: `Bearer ${token}` } });
+      await client.put(`/corkboard/${note.id}`, { tags: updatedTags }, { headers: { Authorization: `Bearer ${token}` } });
+      setNewTag("");
     } catch (err) {
-      console.error("Failed to update content:", err);
+      console.error("Failed to update tags:", err);
     }
   };
 
-  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const el = e.target;
-    el.style.fontSize = "1rem"; // reset
-    while (el.scrollHeight > el.clientHeight && parseFloat(el.style.fontSize) > 0.5) {
-      el.style.fontSize = (parseFloat(el.style.fontSize) - 0.05) + "rem";
+  const handleRemoveTag = async (tagToRemove: string) => {
+    if (!token) return;
+    const updatedTags = (note.tags ?? []).filter((t) => t !== tagToRemove);
+    onUpdate(note.id, { tags: updatedTags });
+    try {
+      await client.put(`/corkboard/${note.id}`, { tags: updatedTags }, { headers: { Authorization: `Bearer ${token}` } });
+    } catch (err) {
+      console.error("Failed to remove tag:", err);
     }
   };
 
   return (
     <div className="corkboard-note-wrapper" style={{ top: note.y, left: note.x - 75 }}>
-      {erasing && (
-        <button className="delete-btn" onClick={() => onDelete(note.id)}>✖</button>
-      )}
+      {erasing && <button className="delete-btn" onClick={() => onDelete(note.id)}>✖</button>}
+
       <textarea
         className="corkboard-note"
-        value={note.content}
+        value={content}
         maxLength={250}
-        onChange={handleContentChange}
+        onChange={(e) => setContent(e.target.value)}
         onClick={e => e.stopPropagation()}
         onMouseDown={handleMouseDown}
-        onInput={handleInput}
       />
+
+      <div className="tag-circle" onClick={(e) => { e.stopPropagation(); setShowTags(!showTags); }}>
+        Tags
+      </div>
+
+      {showTags && (
+      <div className="tag-popup" onClick={(e) => e.stopPropagation()}>
+        <div className="tags-list">
+          {(note.tags ?? []).map((tag) => (
+            <span
+              key={tag}
+              className="tag"
+              onClick={() => handleRemoveTag(tag)}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+        <input
+          type="text"
+          placeholder="Add tag"
+          value={newTag}
+          onChange={(e) => setNewTag(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") handleAddTag(); }}
+        />
+        <button onClick={handleAddTag}>Add</button>
+      </div>
+    )}
+
     </div>
   );
 }

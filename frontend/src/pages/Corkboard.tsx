@@ -1,6 +1,7 @@
-import { useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CorkNote from "../components/CorkNote";
+import SearchBar from "../components/SearchBar";
 import { useCorkboard } from "../components/UseCorkboard";
 import "../styles/Corkboard.css";
 
@@ -10,15 +11,14 @@ export default function Corkboard() {
   const navigate = useNavigate();
 
   const token = localStorage.getItem("access_token");
-  const { notes, addNote, deleteNote, updateNote } = useCorkboard(token);
+  const { filteredNotes, query, setQuery, addNote, deleteNote, updateNote } = useCorkboard(token);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!adding || erasing) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    addNote({ content: "", x: e.clientX - rect.left, y: e.clientY - rect.top });
+    addNote({ content: "", x: e.clientX - rect.left, y: e.clientY - rect.top, tags: [] });
     setAdding(false);
   };
-  
 
   useEffect(() => {
     if (!token) {
@@ -28,9 +28,14 @@ export default function Corkboard() {
 
   return (
     <div className="corkboard-page">
+      <SearchBar query={query} onQueryChange={setQuery} />
+
       <div className="corkboard-canvas-container">
-        <div className={`corkboard-canvas ${adding ? "adding" : ""}`} onClick={handleCanvasClick}>
-          {notes.map(note => (
+        <div
+          className={`corkboard-canvas ${adding ? "adding" : ""}`}
+          onClick={handleCanvasClick}
+        >
+          {filteredNotes.map((note) => (
             <CorkNote
               key={note.id}
               note={note}
@@ -42,12 +47,23 @@ export default function Corkboard() {
           ))}
         </div>
 
-        <button className="toggle-add-btn floating" onClick={() => { setAdding(!adding); setErasing(false); }}>
-          {adding ? "Stop Adding Notes" : "Add Note"}
+        <button
+          className="toggle-add-btn floating"
+          onClick={() => {
+            setAdding(!adding);
+            setErasing(false);
+          }}>
+          +
         </button>
 
-        <button className="eraser-btn" onClick={() => { setErasing(!erasing); setAdding(false); }}>
-          {erasing ? "Stop Erasing" : "Eraser"}
+        <button
+          className="eraser-btn"
+          onClick={() => {
+            setErasing(!erasing);
+            setAdding(false);
+          }}
+        >
+          <img src="/assets/eraser.png" alt="Eraser" width={30} height={30} />
         </button>
 
         <button
@@ -57,9 +73,8 @@ export default function Corkboard() {
             navigate("/");
           }}
         >
-          Logout
+          <img src="/assets/logout.png" alt="Logout" width={30} height={30} />
         </button>
-
       </div>
     </div>
   );

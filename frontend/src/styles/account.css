@@ -4,62 +4,75 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f4f6f8;
-  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #ffe6cc, #ffd9b3);
+  font-family: "Patrick Hand", cursive, Arial, sans-serif;
+  overflow: hidden;
 }
 
-/* Form container */
+/* Form container with cartoonish 3D effect */
 .login-form {
-  background-color: #fff;
+  background-color: #fff7cc;
   padding: 2.5rem 3rem;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
+  box-shadow: 6px 6px 0 #f4d03f, 0 6px 18px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 400px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  border: 2px solid #f4d03f;
+  transform: rotate(-1deg); /* subtle slant */
+  transition: transform 0.2s ease;
 }
 
 /* Form heading */
 .login-form h2 {
   text-align: center;
   margin-bottom: 1.5rem;
-  color: #333;
+  color: #ff7043;;
+  font-size: 2rem;
 }
 
-/* Input fields */
-.login-form input[type="text"],
-.login-form input[type="password"] {
+/* Inputs styling with subtle tilt */
+.login-form input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  border: 2px solid #f76c6c;
+  border-radius: 12px;
   font-size: 1rem;
-  transition: border 0.2s;
+  font-family: "Patrick Hand", cursive, "Comic Neue", sans-serif;
+  background-color: #fff7cc;
+  box-shadow: 2px 2px 0 #f4d03f;
+  transition: all 0.2s ease, transform 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  box-sizing: border-box;
 }
 
-.login-form input[type="text"]:focus,
-.login-form input[type="password"]:focus {
-  outline: none;
-  border-color: #007bff;
+.login-form input:hover {
+  transform: rotate(1deg); /* subtle tilt on hover */
 }
 
 /* Submit button */
 .login-form button {
   width: 100%;
-  padding: 0.75rem 1rem;
-  background-color: #007bff;
+  padding: 0.85rem 1rem;
+  background-color: #ff6b6b;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   color: white;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.2s;
+  box-shadow: 3px 3px 0 #f76c6c;
+  transition: all 0.2s ease, transform 0.2s ease;
 }
 
 .login-form button:hover {
-  background-color: #0056b3;
+  background-color: #ff4b4b;
+  transform: rotate(-1deg) translateY(-2px); /* slight tilt + pop-up */
+  box-shadow: 5px 5px 0 #f76c6c;
 }
 
 /* Adjust form spacing for registration */
@@ -69,4 +82,21 @@
 
 .login-form button {
   margin-top: 0.5rem;
+}
+
+/* Register link */
+.register-link {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.register-link a {
+  color: #ff6b6b;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.register-link a:hover {
+  text-decoration: underline;
 }
