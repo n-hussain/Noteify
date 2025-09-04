@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import CorkNote from "../components/CorkNote";
 import SearchBar from "../components/SearchBar";
 import { useCorkboard } from "../components/useCorkboard";
-import "../styles/Corkboard.css";
+import "../styles/corkboard.css";
 
 export default function Corkboard() {
   const [adding, setAdding] = useState(false);
