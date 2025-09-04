@@ -1,30 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CorkNote from "../components/CorkNote";
 import SearchBar from "../components/SearchBar";
-import { useCorkboard } from "../components/UseCorkboard";
+import { useCorkboard } from "../components/useCorkboard";
 import "../styles/Corkboard.css";
 
 export default function Corkboard() {
   const [adding, setAdding] = useState(false);
   const [erasing, setErasing] = useState(false);
-  const navigate = useNavigate();
+  const [highlightedTags, setHighlightedTags] = useState<string[]>([]);
 
+  const navigate = useNavigate();
   const token = localStorage.getItem("access_token");
   const { filteredNotes, query, setQuery, addNote, deleteNote, updateNote } = useCorkboard(token);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    setHighlightedTags([]);
     if (!adding || erasing) return;
     const rect = e.currentTarget.getBoundingClientRect();
     addNote({ content: "", x: e.clientX - rect.left, y: e.clientY - rect.top, tags: [] });
     setAdding(false);
   };
-
-  useEffect(() => {
-    if (!token) {
-      navigate("/login");
-    }
-  }, [token]);
 
   return (
     <div className="corkboard-page">
@@ -43,6 +39,8 @@ export default function Corkboard() {
               erasing={erasing}
               onDelete={deleteNote}
               onUpdate={updateNote}
+              highlightedTags={highlightedTags}
+              setHighlightedTags={setHighlightedTags}
             />
           ))}
         </div>
@@ -52,7 +50,8 @@ export default function Corkboard() {
           onClick={() => {
             setAdding(!adding);
             setErasing(false);
-          }}>
+          }}
+        >
           +
         </button>
 

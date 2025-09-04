@@ -168,3 +168,9 @@
 .search-bar input:focus {
   transform: rotate(-1deg);
 }
+.corkboard-note-wrapper.highlighted .corkboard-note {
+  box-shadow: 0 0 20px 5px gold, 4px 4px 0 #f0e68c, 6px 6px 15px rgba(0,0,0,0.35);
+  transform: scale(1.05);
+  z-index: 50;
+}
+

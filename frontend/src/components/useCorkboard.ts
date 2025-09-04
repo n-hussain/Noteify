@@ -6,7 +6,7 @@ interface CorkNote {
   content: string;
   x: number;
   y: number;
-  tags: string[]; // normalized to string[]
+  tags: string[];
 }
 
 export function useCorkboard(token: string | null) {
@@ -21,7 +21,7 @@ export function useCorkboard(token: string | null) {
         const normalized = data.map((note: any) => ({
           ...note,
           tags: Array.isArray(note.tags)
-            ? note.tags.map((t: any) => t.name) // convert {id, name} → "name"
+            ? note.tags.map((t: any) => t.name)
             : [],
         }));
         setNotes(normalized);
@@ -35,7 +35,6 @@ export function useCorkboard(token: string | null) {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    // normalize tags for new note as well
     const normalized = {
       ...data,
       tags: Array.isArray(data.tags) ? data.tags.map((t: any) => t.name) : [],
@@ -58,7 +57,6 @@ export function useCorkboard(token: string | null) {
     );
   };
 
-  // Filtered notes based on content OR tags
   const filteredNotes = useMemo(() => {
     if (!query.trim()) return notes;
     const lowerQuery = query.toLowerCase();

@@ -7,9 +7,19 @@ interface CorkNoteProps {
   erasing: boolean;
   onUpdate: (id: number, updatedFields: Partial<{ content: string; x: number; y: number; tags?: string[] }>) => void;
   onDelete: (id: number) => void;
+  highlightedTags: string[];
+  setHighlightedTags: (tags: string[]) => void;
 }
 
-export default function CorkNote({ note, token, erasing, onUpdate, onDelete }: CorkNoteProps) {
+export default function CorkNote({
+  note,
+  token,
+  erasing,
+  onUpdate,
+  onDelete,
+  highlightedTags,
+  setHighlightedTags,
+}: CorkNoteProps) {
   const [showTags, setShowTags] = useState(false);
   const [newTag, setNewTag] = useState("");
   const [content, setContent] = useState(note.content ?? "");
@@ -23,19 +33,34 @@ export default function CorkNote({ note, token, erasing, onUpdate, onDelete }: C
       if (content !== note.content) {
         onUpdate(note.id, { content });
         if (token) {
-          client.put(`/corkboard/${note.id}`, { content }, { headers: { Authorization: `Bearer ${token}` } })
-            .catch(err => console.error("Failed to update content:", err));
+          client
+            .put(`/corkboard/${note.id}`, { content }, { headers: { Authorization: `Bearer ${token}` } })
+            .catch((err) => console.error("Failed to update content:", err));
         }
       }
     }, 500);
     return () => clearTimeout(handler);
   }, [content, note.content, note.id, onUpdate, token]);
 
+const getFontSize = () => {
+  const length = content.split("").reduce((acc, char) => acc + (char === "\n" ? 10 : 1), 0);
+  const maxFont = 2.2;
+  const minFont = 1;   
+  const startShrink = 10; 
+  const maxLength = 200; 
+
+  if (length <= startShrink) return maxFont;  
+  if (length >= maxLength) return minFont;    
+
+  const t = (length - startShrink) / (maxLength - startShrink);
+  return maxFont - t * (maxFont - minFont);  
+};
+
+
   const handleMouseDown = (e: React.MouseEvent<HTMLTextAreaElement>) => {
     if (erasing) return;
     e.stopPropagation();
-
-    const canvasRect = document.querySelector('.corkboard-canvas')?.getBoundingClientRect();
+    const canvasRect = document.querySelector(".corkboard-canvas")?.getBoundingClientRect();
     if (!canvasRect) return;
 
     const offsetX = e.clientX - canvasRect.left - note.x;
@@ -53,7 +78,6 @@ export default function CorkNote({ note, token, erasing, onUpdate, onDelete }: C
     const handleMouseUp = async () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
-
       if (!token) return;
       try {
         await client.put(`/corkboard/${note.id}`, { x: currentX, y: currentY }, { headers: { Authorization: `Bearer ${token}` } });
@@ -89,16 +113,26 @@ export default function CorkNote({ note, token, erasing, onUpdate, onDelete }: C
     }
   };
 
+
+  const isHighlighted = note.tags?.some(tag => highlightedTags.includes(tag));
+
   return (
-    <div className="corkboard-note-wrapper" style={{ top: note.y, left: note.x - 75 }}>
+    <div
+      className={`corkboard-note-wrapper ${isHighlighted ? "highlighted" : ""}`}
+      style={{ top: note.y, left: note.x - 75 }}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (note.tags && note.tags.length > 0) setHighlightedTags(note.tags);
+      }}
+    >
       {erasing && <button className="delete-btn" onClick={() => onDelete(note.id)}>✖</button>}
 
       <textarea
         className="corkboard-note"
         value={content}
         maxLength={250}
+        style={{ fontSize: `${getFontSize()}rem` }}
         onChange={(e) => setContent(e.target.value)}
-        onClick={e => e.stopPropagation()}
         onMouseDown={handleMouseDown}
       />
 
@@ -107,29 +141,30 @@ export default function CorkNote({ note, token, erasing, onUpdate, onDelete }: C
       </div>
 
       {showTags && (
-      <div className="tag-popup" onClick={(e) => e.stopPropagation()}>
-        <div className="tags-list">
-          {(note.tags ?? []).map((tag) => (
-            <span
-              key={tag}
-              className="tag"
-              onClick={() => handleRemoveTag(tag)}
-            >
-              {tag}
-            </span>
-          ))}
+        <div className="tag-popup" onClick={(e) => e.stopPropagation()}>
+          <div className="tags-list">
+            {(note.tags ?? []).map((tag) => (
+              <span key={tag} className="tag">
+                {tag}
+                <span
+                  style={{ marginLeft: "4px", color: "red", cursor: "pointer" }}
+                  onClick={() => handleRemoveTag(tag)}
+                >
+                  ✖
+                </span>
+              </span>
+            ))}
+          </div>
+          <input
+            type="text"
+            placeholder="Add tag"
+            value={newTag}
+            onChange={(e) => setNewTag(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleAddTag(); }}
+          />
+          <button onClick={handleAddTag}>Add</button>
         </div>
-        <input
-          type="text"
-          placeholder="Add tag"
-          value={newTag}
-          onChange={(e) => setNewTag(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") handleAddTag(); }}
-        />
-        <button onClick={handleAddTag}>Add</button>
-      </div>
-    )}
-
+      )}
     </div>
   );
 }
