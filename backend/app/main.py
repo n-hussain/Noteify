@@ -96,3 +96,10 @@ def delete_corkboard_note(
         raise HTTPException(status_code=404, detail="Note not found or access denied")
     crud.delete_note(db, note_id)
     return {"detail": "Note deleted successfully"}
+
+if __name__ == "__main__":
+    import os
+    import uvicorn
+
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
