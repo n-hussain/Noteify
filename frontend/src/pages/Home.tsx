@@ -11,8 +11,8 @@ export default function Home() {
           <Link to="/login" className="btn">
             Login
           </Link>
-          <Link to="/corkboard" className="btn register">
-            Go To Corkboard
+          <Link to="/register" className="btn register">
+            Register
           </Link>
         </div>
       </div>
