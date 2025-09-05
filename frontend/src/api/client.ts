@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const client = axios.create({
-  baseURL: "http://127.0.0.1:8000",
+  baseURL: "https://noteify-3c3u.onrender.com",
 });
 
 client.interceptors.request.use((config) => {
